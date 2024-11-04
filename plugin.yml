@@ -1,0 +1,18 @@
+name: demystdata/semver-ecr
+description: "A Buildkite plugin for semantic versioning with ECR"
+author: "DemystData"
+repository: "https://github.com/DemystData/semver-ecr-buildkite-plugin.git"
+requirements: []
+configuration:
+  properties:
+    repository:
+      type: string
+    region:
+      type: string
+    account:
+      type: string
+  required: 
+    - repository
+    - region
+    - account
+  additionalProperties: false
