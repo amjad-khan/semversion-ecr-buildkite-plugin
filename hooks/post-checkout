@@ -1,66 +1,59 @@
 #!/bin/bash
 
-# Ensure script exits on error
+# Enable strict error handling
 set -euo pipefail
 
-
+# Execute only if on the main branch
 if [ "$BUILDKITE_BRANCH" == "main" ]; then
 
-  # Check if the required environment variables are set
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY:-}" ]] ; then
-        echo "Repository not set"
-        exit 1
-  else
-        echo "Using Repository: ${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}"
+  # Validate that required environment variables are set
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY:-}" ]]; then
+    echo "Error: Repository not specified."
+    exit 1
   fi
+  echo "Using Repository: ${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}"
 
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION:-}" ]] ; then
-        echo "Region not set"
-        exit 1
-  else
-        echo "Region: ${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}"
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION:-}" ]]; then
+    echo "Error: Region not specified."
+    exit 1
   fi
+  echo "Region: ${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}"
 
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT:-}" ]] ; then
-        echo "Account not set"
-        exit 1
-  else
-        echo "Repository Account: ${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}"
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT:-}" ]]; then
+    echo "Error: Account not specified."
+    exit 1
   fi
+  echo "Account ID: ${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}"
 
-  # Get the latest commit message
+  # Extract the latest commit message
   commit_message=$(git log -1 --pretty=%s)
 
-  # Extract the string from source branch
+  # Derive the version bump type from the commit message, defaults to 'patch' if unspecified
   VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p')
+  VERSION_BUMP="${VERSION_BUMP:-patch}"
+  echo "Version bump type identified: $VERSION_BUMP"
 
-  echo "Version to Bump: $VERSION_BUMP"
-
+  # Fetch the latest version tag from ECR
   LATEST_TAG=$(aws ecr describe-images \
-      --repository-name  ${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY} \
-      --region ${BUILDKITE_PLUGIN_SEMVER_ECR_REGION} \
-      --registry-id ${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT} \
-      --query 'imageDetails[?starts_with(imageTags[0], `v`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]' \
-      --output text)
+    --repository-name "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}" \
+    --region "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}" \
+    --registry-id "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}" \
+    --query 'imageDetails[?starts_with(imageTags[0], `v`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]' \
+    --output text)
 
-  # Set default version if no tags exist
+  # Initialize version to 1.0.0 if no previous tags exist
   if [ -z "$LATEST_TAG" ]; then
-    echo "No tags found in ECR; setting initial version to 1.0.0"
+    echo "No version tags found; initializing with v1.0.0"
     LATEST_TAG="v1.0.0"
   fi
 
-  # Remove the "v" prefix if it exists
-  LATEST_TAG=${LATEST_TAG#v}  
-  
-  # Parse the version components
-  MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
-  MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-  PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+  # Strip the 'v' prefix and parse version components
+  LATEST_TAG="${LATEST_TAG#v}"
+  MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1)
+  MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+  PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
 
-  # Determine version bump type (default to patch if VERSION_BUMP is unset)
-  VERSION_BUMP="${VERSION_BUMP:-patch}"
-
-  # Adjust version based on VERSION_BUMP
+  # Increment version based on the identified bump type
   case "$VERSION_BUMP" in
     major)
       MAJOR=$((MAJOR + 1))
@@ -71,19 +64,24 @@ if [ "$BUILDKITE_BRANCH" == "main" ]; then
       MINOR=$((MINOR + 1))
       PATCH=0
       ;;
-    fix)
+    fix | patch)
+      PATCH=$((PATCH + 1))
+      ;;
+    *)
+      echo "Unknown version bump type: $VERSION_BUMP. Defaulting to patch."
       PATCH=$((PATCH + 1))
       ;;
   esac
 
-  # Calculate the next version
+  # Construct the next version tag
   NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-  echo "Calculated next version for main: $NEXT_VERSION"
+  echo "Next version for main branch: $NEXT_VERSION"
 
 else
-  # Use the current tag as the version for non-main branches
-  NEXT_VERSION=${BUILDKITE_BUILD_NUMBER}
-  
+  # For non-main branches, use the build number as the version tag
+  NEXT_VERSION="${BUILDKITE_BUILD_NUMBER}"
+  echo "Non-main branch version set to build number: $NEXT_VERSION"
 fi
+
+# Export the next version for further use
 export NEXT_VERSION
-echo "NEXT_VERSION in script: $NEXT_VERSION"
