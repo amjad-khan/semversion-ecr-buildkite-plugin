@@ -8,7 +8,7 @@ Below is an example configuration for using this plugin in a Buildkite pipeline.
 ```yaml
 steps:
   - plugins:
-      - demystdata/semver-ecr:
+      - amjad-khan/semver-ecr:
           repository: "your-ecr-repo-name"
-          region: "ap-southeast-2"
+          region: "region"
           account: "number"

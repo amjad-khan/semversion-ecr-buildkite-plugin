@@ -85,3 +85,4 @@ fi
 
 # Export the next version for further use
 export NEXT_VERSION
+echo "Exported NEXT_VERSION: $NEXT_VERSION"
