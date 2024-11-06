@@ -11,6 +11,10 @@ configuration:
       type: string
     account:
       type: string
+    version_branch:
+      type: string
+    initial_version:
+      type: string
   required: 
     - repository
     - region
