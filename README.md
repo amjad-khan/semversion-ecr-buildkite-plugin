@@ -12,3 +12,6 @@ steps:
           repository: "your-ecr-repo-name"
           region: "region"
           account: "number"
+          version_branch: "branch-name"
+          initial_version: "v0.0.1"
+          tag_suffix: true
