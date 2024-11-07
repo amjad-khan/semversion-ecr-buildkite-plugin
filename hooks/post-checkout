@@ -87,6 +87,12 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
 
   # Construct the next version tag
   NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+
+  # Add the branch as a suffix if tag_suffix is true
+  if [[ "${BUILDKITE_PLUGIN_SEMVER_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
+    NEXT_VERSION="${NEXT_VERSION}-${VERSION_BRANCH}"
+  fi
+  
   echo "Next version for main branch: $NEXT_VERSION"
 
 else
