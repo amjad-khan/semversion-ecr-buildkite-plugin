@@ -64,14 +64,14 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
       --repository-name "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY}" \
       --region "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION}" \
       --registry-id "${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT}" \
-      --query 'imageDetails[?starts_with(imageTags[0], `v`) && !contains(imageTags[0], `-`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]' \
+      --query "imageDetails[?ends_with(imageTags[0], \`-${VERSION_BRANCH}\`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]" \
       --output text)
   else
-    LATEST_TAG=$(aws ecr describe-images \
+      LATEST_TAG=$(aws ecr describe-images \
       --repository-name "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY}" \
       --region "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION}" \
       --registry-id "${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT}" \
-      --query "imageDetails[?ends_with(imageTags[0], \`-${VERSION_BRANCH}\`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]" \
+      --query 'imageDetails[?starts_with(imageTags[0], `v`) && !contains(imageTags[0], `-`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]' \
       --output text)
   fi
 
