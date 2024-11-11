@@ -8,7 +8,7 @@ Below is an example configuration for using this plugin in a Buildkite pipeline.
 ```yaml
 steps:
   - plugins:
-      - amjad-khan/semver-ecr:
+      - amjad-khan/semver-ecr#v0.1.0:
           repository: "your-ecr-repo-name"
           region: "region"
           account: "number"
