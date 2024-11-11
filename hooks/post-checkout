@@ -6,8 +6,8 @@ set -euo pipefail
 # Function to validate initial parameters
 validate_parameters() {
   # Check and validate optional parameters
-  INITIAL_VERSION="${BUILDKITE_PLUGIN_SEMVER_ECR_INITIAL_VERSION:-v1.0.0}"
-  TAG_SUFFIX="${BUILDKITE_PLUGIN_SEMVER_ECR_TAG_SUFFIX:-false}"
+  INITIAL_VERSION="${BUILDKITE_PLUGIN_SEMVERSION_ECR_INITIAL_VERSION:-v1.0.0}"
+  TAG_SUFFIX="${BUILDKITE_PLUGIN_SEMVERSION_ECR_TAG_SUFFIX:-false}"
 
   # Validate initial version format (e.g., "v1.0.0")
   if [[ ! "$INITIAL_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -26,29 +26,29 @@ validate_parameters() {
 validate_parameters
 
 # Use the provided version branch or default to "main"
-VERSION_BRANCH="${BUILDKITE_PLUGIN_SEMVER_ECR_VERSION_BRANCH:-main}"
+VERSION_BRANCH="${BUILDKITE_PLUGIN_SEMVERSION_ECR_VERSION_BRANCH:-main}"
 
 # Execute only if on the main branch
 if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
 
   # Validate that required environment variables are set
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY:-}" ]]; then
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY:-}" ]]; then
     echo "Error: Repository not specified."
     exit 1
   fi
-  echo "Using Repository: ${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}"
+  echo "Using Repository: ${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY}"
 
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION:-}" ]]; then
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION:-}" ]]; then
     echo "Error: Region not specified."
     exit 1
   fi
-  echo "Region: ${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}"
+  echo "Region: ${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION}"
 
-  if [[ -z "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT:-}" ]]; then
+  if [[ -z "${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT:-}" ]]; then
     echo "Error: Account not specified."
     exit 1
   fi
-  echo "Account ID: ${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}"
+  echo "Account ID: ${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT}"
 
   # Extract the latest commit message
   commit_message=$(git log -1 --pretty=%s)
@@ -59,18 +59,18 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   echo "Version bump type identified: $VERSION_BUMP"
 
   # Fetch the latest version tag from ECR based on tag_suffix
-  if [[ "${BUILDKITE_PLUGIN_SEMVER_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
+  if [[ "${BUILDKITE_PLUGIN_SEMVERSION_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
     LATEST_TAG=$(aws ecr describe-images \
-      --repository-name "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}" \
-      --region "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}" \
-      --registry-id "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}" \
+      --repository-name "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY}" \
+      --region "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION}" \
+      --registry-id "${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT}" \
       --query 'imageDetails[?starts_with(imageTags[0], `v`) && !contains(imageTags[0], `-`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]' \
       --output text)
   else
     LATEST_TAG=$(aws ecr describe-images \
-      --repository-name "${BUILDKITE_PLUGIN_SEMVER_ECR_REPOSITORY}" \
-      --region "${BUILDKITE_PLUGIN_SEMVER_ECR_REGION}" \
-      --registry-id "${BUILDKITE_PLUGIN_SEMVER_ECR_ACCOUNT}" \
+      --repository-name "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REPOSITORY}" \
+      --region "${BUILDKITE_PLUGIN_SEMVERSION_ECR_REGION}" \
+      --registry-id "${BUILDKITE_PLUGIN_SEMVERSION_ECR_ACCOUNT}" \
       --query "imageDetails[?ends_with(imageTags[0], \`-${VERSION_BRANCH}\`)] | sort_by(@, &imagePushedAt)[-1].imageTags[0]" \
       --output text)
   fi
@@ -86,7 +86,7 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   LATEST_TAG="${LATEST_TAG#v}"
 
   # Remove branch suffix if tag_suffix is true
-  if [[ "${BUILDKITE_PLUGIN_SEMVER_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
+  if [[ "${BUILDKITE_PLUGIN_SEMVERSION_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
     LATEST_TAG="${LATEST_TAG%-*}"
   fi
 
@@ -120,7 +120,7 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
 
   # Add the branch as a suffix if tag_suffix is true
-  if [[ "${BUILDKITE_PLUGIN_SEMVER_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
+  if [[ "${BUILDKITE_PLUGIN_SEMVERSION_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
     NEXT_VERSION="${NEXT_VERSION}-${VERSION_BRANCH}"
   fi
   
