@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -uo pipefail
+
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+main() {
+
+    export ENV_TEST=${AWS_ACCOUNT_ID}
+
+}
+
+main
