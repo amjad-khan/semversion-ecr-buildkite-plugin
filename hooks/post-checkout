@@ -57,6 +57,12 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   if echo "$commit_message" | grep -q "Merge pull request"; then
     # Extract version bump type from the PR title
     VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p' || true)
+
+    # Check if VERSION_BUMP is empty or invalid
+    if [[ -z "$VERSION_BUMP" ]]; then
+        echo "Warning: Unable to extract version bump type from commit message. Defaulting to 'patch'."
+    fi
+
     VERSION_BUMP="${VERSION_BUMP:-patch}"
   else
     # Handle direct commits to the main branch
@@ -137,7 +143,7 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
     NEXT_VERSION="${NEXT_VERSION}-${VERSION_BRANCH}"
   fi
   
-  echo "Next version for main branch: $NEXT_VERSION"
+  echo "Next version is : $NEXT_VERSION"
 
 else
   # For non-main branches, use the build number as the version tag
