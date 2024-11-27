@@ -56,7 +56,7 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   # Check if the commit is a PR merge (contains 'Merge pull request')
   if echo "$commit_message" | grep -q "Merge pull request"; then
     # Extract version bump type from the PR title
-    VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p')
+    VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p' || true)
     VERSION_BUMP="${VERSION_BUMP:-patch}"
   else
     # Handle direct commits to the main branch
