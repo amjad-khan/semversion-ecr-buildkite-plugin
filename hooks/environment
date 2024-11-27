@@ -3,8 +3,8 @@
 # Enable strict error handling
 set -euo pipefail
 
-HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$HOOKS_DIR"
+#HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+#cd "$HOOKS_DIR"
 
 # Function to validate initial parameters
 validate_parameters() {
