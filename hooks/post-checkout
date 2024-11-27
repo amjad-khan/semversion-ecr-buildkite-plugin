@@ -63,7 +63,7 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
     echo "Direct commit detected. Commit message: '$commit_message'"
 
     # Try to extract a version bump keyword (e.g., 'bump:major', 'bump:minor')
-    VERSION_BUMP=$(echo "$commit_message" | grep -oE "bump:(major|minor|patch)" | cut -d: -f2)
+    VERSION_BUMP=$(echo "$commit_message" | grep -oE "bump:(major|minor|patch)" | cut -d: -f2 || true)
 
     # Default to 'patch' if no bump keyword is found
     VERSION_BUMP="${VERSION_BUMP:-patch}"
