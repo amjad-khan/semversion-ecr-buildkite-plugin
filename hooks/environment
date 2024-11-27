@@ -53,10 +53,23 @@ if [ "$BUILDKITE_BRANCH" == "$VERSION_BRANCH" ]; then
   # Extract the latest commit message
   commit_message=$(git log -1 --pretty=%s)
 
-  # Derive the version bump type from the commit message, defaults to 'patch' if unspecified
-  VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p')
-  VERSION_BUMP="${VERSION_BUMP:-patch}"
-  echo "Version bump type identified: $VERSION_BUMP"
+  # Check if the commit is a PR merge (contains 'Merge pull request')
+  if echo "$commit_message" | grep -q "Merge pull request"; then
+    # Extract version bump type from the PR title
+    VERSION_BUMP=$(echo "$commit_message" | sed -n 's|.*DemystData/\([^/]*\)/.*|\1|p')
+    VERSION_BUMP="${VERSION_BUMP:-patch}"
+  else
+    # Handle direct commits to the main branch
+    echo "Direct commit detected. Commit message: '$commit_message'"
+
+    # Try to extract a version bump keyword (e.g., 'bump:major', 'bump:minor')
+    VERSION_BUMP=$(echo "$commit_message" | grep -oE "bump:(major|minor|patch)" | cut -d: -f2)
+
+    # Default to 'patch' if no bump keyword is found
+    VERSION_BUMP="${VERSION_BUMP:-patch}"
+  fi
+
+  echo "Version bump type: $VERSION_BUMP"
 
   # Fetch the latest version tag from ECR based on tag_suffix
   if [[ "${BUILDKITE_PLUGIN_SEMVERSION_ECR_TAG_SUFFIX:-false}" == "true" ]]; then
